@@ -14,8 +14,9 @@ end_date = d1
 d2 = today - timedelta(days=5000) 
 d2 = d2.strftime('%Y-%m-%d')
 start_date = d2 
+best_stocks_today = ['TSLA', 'META', 'AMZN', 'NFLX', 'AMD']
 
-data = yf.download('AAPL', start=start_date, end=end_date, progress=False)
+data = yf.download('NVDA', start=start_date, end=end_date, progress=False)
 #print(data)
 
 data['Date'] = data.index
@@ -61,23 +62,30 @@ model.fit(X_train, y_train, batch_size=30, epochs=10)
 last_day_data = data.iloc[-1][['Open', 'High', 'Low', 'Volume']].values
 last_day_data = last_day_data.astype('float32')
 last_day_data = last_day_data.reshape((1,4,1))
+
+predicted_closing_value = model.predict(last_day_data)
+#print(predicted_closing_value)
+#print(data.iloc[-1]['Close'])
+#print(data.iloc[-1]['Date'])
+
+print(f"Date is {data.iloc[-1]['Date']} \n Predicted closing price : {predicted_closing_value} \n Actual closing price : {data.iloc[-1]['Close']}")
 #print(type(last_day_data))
 
-predicted_closing_values = []
-actual_date = data['Date'].iloc[-1]
+#predicted_closing_values = []
+#actual_date = data['Date'].iloc[-1]
 
-for i in range(3):  # Predict for the next 3 days
-    predicted_closing_value = model.predict(last_day_data)
-    predicted_closing_values.append(predicted_closing_value[0][0])
+#for i in range(3):  # Predict for the next 3 days
+   # predicted_closing_value = model.predict(last_day_data)
+    #predicted_closing_values.append(predicted_closing_value[0][0])
 
-    actual_date += timedelta(days=0)
+   # actual_date += timedelta(days=0)
 
     # Update last_day_data to include the predicted value for the next day
-    last_day_data = np.array([predicted_closing_value], dtype='float32').reshape(1, 1, 1)
+    #last_day_data = np.array([predicted_closing_value], dtype='float32').reshape(1, 1, 1)
 
-for i, value in enumerate(predicted_closing_values, start=1):
-    next_day = (actual_date + timedelta(days=i)).strftime('%Y-%m-%d')
-    print(f'Predicted closing for {next_day} : {value}')
+#for i, value in enumerate(predicted_closing_values, start=1):
+ #   next_day = (actual_date + timedelta(days=i)).strftime('%Y-%m-%d')
+#  print(f'Predicted closing for {next_day} : {value}')
 
 
 #    predicted_closing_values.append(predicted_closing_value)
