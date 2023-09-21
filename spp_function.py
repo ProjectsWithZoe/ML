@@ -58,22 +58,35 @@ model.add(Dense(1))
 model.compile(optimizer='adam', loss='mean_squared_error', metrics=['MAE'])
 model.fit(X_train, y_train, batch_size=30, epochs=10)
 
-#model testing 
-y_pred = model.predict(X_test)
-#print(y_pred)
+last_day_data = data.iloc[-1][['Open', 'High', 'Low', 'Volume']].values
+last_day_data = last_day_data.astype('float32')
+last_day_data = last_day_data.reshape((1,4,1))
+#print(type(last_day_data))
 
-mae = mean_absolute_error(y_test, y_pred)
-mse = mean_squared_error(y_test, y_pred)
-rmse = np.sqrt(mse)
-r_squared = r2_score(y_test, y_pred)
+predicted_closing_values = []
+actual_date = data['Date'].iloc[-1]
 
-print(f'MAE: {mae}\n MSE: {mse}\n RMSE: {rmse} \n R2: {r_squared} ')
+for i in range(3):  # Predict for the next 3 days
+    predicted_closing_value = model.predict(last_day_data)
+    predicted_closing_values.append(predicted_closing_value[0][0])
 
-#testing code 
+    actual_date += timedelta(days=0)
 
-features = np.array([[177.089996, 180.419998, 177.070007, 74919600]])
-predicted_close_value = model.predict(features)
-print(predicted_close_value)
+    # Update last_day_data to include the predicted value for the next day
+    last_day_data = np.array([predicted_closing_value], dtype='float32').reshape(1, 1, 1)
+
+for i, value in enumerate(predicted_closing_values, start=1):
+    next_day = (actual_date + timedelta(days=i)).strftime('%Y-%m-%d')
+    print(f'Predicted closing for {next_day} : {value}')
+
+
+#    predicted_closing_values.append(predicted_closing_value)
+#print(predicted_closing_value)
+#print(data.iloc[-1]['Close'])
+
+#predicted_closing_values.append(predicted_closing_value[0][0])
+
+#print(last_day_data)
 #CODE NOTES
 #When drop is set to True, it means that the current index of the DataFrame will be removed and not added as a new column in the DataFrame.
 #When inplace is set to True, it means that the operation is performed directly on the data DataFrame or Series, and no new DataFrame or Series is created.
@@ -88,3 +101,5 @@ print(predicted_close_value)
 #Mean Squared Error (MSE): This metric measures the average squared difference between predicted and actual values. It's commonly used when you want to minimize the error between predicted and actual values.
 #Root Mean Squared Error (RMSE): RMSE is the square root of the MSE. It provides an interpretable measure of the error in the same units as the target variable.
 #Mean Absolute Error (MAE): MAE measures the average absolute difference between predicted and actual values. It's robust to outliers and provides a more interpretable error measure compared to MSE.
+
+#.reshape(1, 1, 1): It reshapes the NumPy array into a 3D array with dimensions (1, 1, 1). This reshaping is typically done to match the expected input shape of your LSTM model. LSTM models often expect input data in the form of sequences, and a shape of (batch_size, timesteps, features) is common. In this case, you're reshaping it to a batch size of 1, one timestep, and one feature, which corresponds to a single prediction.
