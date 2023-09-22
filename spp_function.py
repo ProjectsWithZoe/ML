@@ -15,24 +15,10 @@ start_date = (today - timedelta(days=5000)).strftime('%Y-%m-%d')
 best_stocks_today = ['TSLA', 'META', 'AMZN', 'NFLX', 'AMD', 'NVDA']
 for i in best_stocks_today:
     data = yf.download({i}, start=start_date, end=end_date, progress=False)
-    #print(data)
 
     data['Date'] = data.index
     data = data[['Date', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume']]
     data.reset_index(drop=True, inplace=True)
-
-    #print(data.head())
-    #print(data.tail())
-    
-    figure = go.Figure(data=[go.Candlestick(x=data['Date'], open=data['Open'], high=data['High'], low=data['Low'], close=data['Close'])])
-    figure.update_layout(title='Stock Price analysis', xaxis_rangeslider_visible = False)
-    #figure.show()
-    #the close column is the target column
-
-    correlation = data.corr()
-    #print(correlation['Close'].sort_values(ascending=False))
-
-    #looks at the correlation of the close column to the other columns
 
     X=data[['Open', 'High', 'Low', 'Volume']]
     y= data['Close']
@@ -44,28 +30,34 @@ for i in best_stocks_today:
     from sklearn.model_selection import train_test_split
     X_train, X_test, y_train, y_test = train_test_split(X,y, test_size=0.2, random_state = 42)
 
-
     #Neural network preparation
     model = Sequential()
     model.add(LSTM(units=128, return_sequences=True, input_shape= (X_train.shape[1], 1)))
     model.add(LSTM(units=64, return_sequences=False))
     model.add(Dense(25))
     model.add(Dense(1))
-    #model.summary()
 
     model.compile(optimizer='adam', loss='mean_squared_error', metrics=['MAE'])
     model.fit(X_train, y_train, batch_size=30, epochs=10)
+
+    y_pred = model.predict(X_test)
+    y_true = y_test
+
+    mae = mean_absolute_error(y_true, y_pred)
+    mse = mean_squared_error(y_true, y_pred)
+    r2 = r2_score(y_true, y_pred)
+
+    #print(f'MAE : {mae}, MSE : {mse}, R2 : {r2}')
+
+    #testing model on current data 
 
     last_day_data = data.iloc[-1][['Open', 'High', 'Low', 'Volume']].values
     last_day_data = last_day_data.astype('float32')
     last_day_data = last_day_data.reshape((1,4,1))
 
     predicted_closing_value = model.predict(last_day_data)
-    #print(predicted_closing_value)
-    #print(data.iloc[-1]['Close'])
-    #print(data.iloc[-1]['Date'])
 
-    print(f"Date : {data.iloc[-1]['Date']} \n Stock : {i} \n Predicted closing price : {predicted_closing_value} \n Actual closing price : {data.iloc[-1]['Close']}")
+    print(f"Stock : {i} \n Date : {data.iloc[-1]['Date']} \n Stock : {i} \n Predicted closing price : {predicted_closing_value} \n Actual closing price : {data.iloc[-1]['Close']}")
     #print(data.tail())
     #print(start_date)
     #print(end_date)
