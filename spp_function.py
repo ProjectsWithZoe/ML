@@ -13,8 +13,8 @@ today = date.today()
 end_date = (today+timedelta(days=1)).strftime('%Y-%m-%d')
 start_date = (today - timedelta(days=5000)).strftime('%Y-%m-%d')
 best_stocks_today = ['TSLA', 'META', 'AMZN', 'NFLX', 'AMD', 'NVDA']
-for i in best_stocks_today:
-    data = yf.download({i}, start=start_date, end=end_date, progress=False)
+def stock_price_predictor(stock):
+    data = yf.download(stock, start=start_date, end=end_date, progress=False)
 
     data['Date'] = data.index
     data = data[['Date', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume']]
@@ -57,7 +57,7 @@ for i in best_stocks_today:
 
     predicted_closing_value = model.predict(last_day_data)
 
-    print(f"Stock : {i} \n Date : {data.iloc[-1]['Date']} \n Stock : {i} \n Predicted closing price : {predicted_closing_value} \n Actual closing price : {data.iloc[-1]['Close']}")
+    print(f"Date : {data.iloc[-1]['Date']} \n Stock : {stock} \n Predicted closing price : {predicted_closing_value[0][0]} \n Actual closing price : {data.iloc[-1]['Close']}")
     #print(data.tail())
     #print(start_date)
     #print(end_date)
